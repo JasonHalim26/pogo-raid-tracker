@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import LoadingPopup from './LoadingPopup';
+import PokemonSearch from './PokemonSearch';
+// import getAllPokemonNames from '../api/utils';
 
 export default function ShinyTracker() {
     const maxPity = 20;
@@ -102,6 +104,18 @@ export default function ShinyTracker() {
         }
     };
 
+    const [pokemonList, setPokemonList] = useState([]);
+
+    async function getAllPokemonNames() {
+        const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10000');
+        const data = await res.json();
+        return data.results.map((p) => p.name);
+    }
+
+    useEffect(() => {
+        getAllPokemonNames().then(setPokemonList);
+    }, []);
+
     if (loading) return <div className="text-white text-center p-6">Loading...</div>;
 
     return (
@@ -114,13 +128,16 @@ export default function ShinyTracker() {
                 {errorMessage && <p className="text-red-400 text-sm text-center">{errorMessage}</p>}
 
                 <div className="flex gap-2 items-center flex-wrap w-full">
-                    <input
+                    {/* <input
                         type="text"
                         placeholder="Enter Pokémon name"
                         value={newPokemonName}
                         onChange={(e) => setNewPokemonName(e.target.value)}
                         className="flex-1 p-2 rounded bg-gray-700 text-white max-w-full sm:max-w-[80%]"
-                    />
+                    /> */}
+
+                    <PokemonSearch pokemonList={pokemonList} value={newPokemonName} onChange={setNewPokemonName} />
+
                     <button
                         onClick={createPokemon}
                         className="bg-blue-600 px-3 py-2 rounded hover:bg-blue-500 w-full sm:w-auto"
