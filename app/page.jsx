@@ -27,6 +27,7 @@ const ctx = getNetlifyContext();
 export default function Page() {
     return (
         <div className="flex flex-col gap-12 sm:gap-16">
+            <Link href="/profile">setup profile</Link>
             <Tracker />
         </div>
     );

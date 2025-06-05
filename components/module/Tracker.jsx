@@ -190,19 +190,19 @@ export default function ShinyTracker() {
                             <div className="flex justify-between mt-4 gap-4 flex-col">
                                 <div className="flex gap-2 items-center w-full">
                                     <button
-                                        onClick={addRaid}
-                                        className="bg-green-600 px-4 py-2 rounded hover:bg-green-500"
+                                        onClick={markShiny}
+                                        className="bg-yellow-500 px-4 py-2 rounded hover:bg-yellow-400 w-full"
                                     >
-                                        +{/* + Increase Raid */}
+                                        🌟 Shiny
                                     </button>
                                     <button onClick={rmvRaid} className="bg-red-600 px-4 py-2 rounded hover:bg-red-500">
                                         - {/* - Decrease Raid */}
                                     </button>
                                     <button
-                                        onClick={markShiny}
-                                        className="bg-yellow-500 px-4 py-2 rounded hover:bg-yellow-400 w-full"
+                                        onClick={addRaid}
+                                        className="bg-green-600 px-4 py-2 rounded hover:bg-green-500"
                                     >
-                                        🌟 Shiny
+                                        +{/* + Increase Raid */}
                                     </button>
                                 </div>
 
