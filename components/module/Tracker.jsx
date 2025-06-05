@@ -159,7 +159,7 @@ export default function ShinyTracker() {
 
                     return (
                         <div key={idx} className="w-full bg-gray-800 rounded-lg shadow-lg p-6 space-y-4">
-                            <h2 className="text-2xl font-bold text-center text-blue-400">
+                            <h2 className="text-2xl font-bold text-center text-blue-400 capitalize">
                                 {tracker.pokemonName} Shiny Tracker
                             </h2>
 
