@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
-export default function Login() {
+export default function Login({ savedData = {} }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -50,11 +50,15 @@ export default function Login() {
             const user = userCredential.user;
 
             // 2. Simpan data user ke Firestore
-            await setDoc(doc(db, 'users', user.uid), {
+            const dataSet = {
                 email: user.email,
                 createdAt: serverTimestamp(),
-                role: 'user' // misal default role
-            });
+                role: 'user', // misal default role,
+                userAtt: savedData
+            };
+            console.log(' 🚀 ༼;´༎ຶ ۝ ༎ຶ༽ ~  (ノ ° 益 °) ノ ~ (っ◔◡◔)っ ~   ~ dataSet:', dataSet);
+
+            await setDoc(doc(db, 'users', user.uid), dataSet);
 
             console.log('User signed up and saved to Firestore!');
 
