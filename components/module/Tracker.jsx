@@ -149,6 +149,7 @@ export default function ShinyTracker() {
 
             <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {allTrackers.map((tracker, idx) => {
+                    console.log(' 🚀 ༼;´༎ຶ ۝ ༎ຶ༽ ~  (ノ ° 益 °) ノ ~ (っ◔◡◔)っ ~   ~ tracker:', tracker);
                     const progress = Math.min((tracker.totalRaids / maxPity) * 100, 100);
                     const left = Math.max(maxPity - tracker.totalRaids, 0);
 
@@ -157,10 +158,17 @@ export default function ShinyTracker() {
                     const markShiny = () => saveTracker(tracker.totalRaids, true, tracker.pokemonName);
                     const resetAll = () => saveTracker(0, false, tracker.pokemonName);
 
+                    const isShiny = tracker.gotShiny;
+
                     return (
-                        <div key={idx} className="w-full bg-gray-800 rounded-lg shadow-lg p-6 space-y-4">
-                            <h2 className="text-2xl font-bold text-center text-blue-400 capitalize">
-                                {tracker.pokemonName} Shiny Tracker
+                        <div key={idx} className={`w-full bg-gray-800 rounded-lg shadow-lg p-6 space-y-4`}>
+                            <h2
+                                className={`text-2xl font-bold text-center  capitalize  ${
+                                    isShiny ? 'text-yellow-300' : 'text-blue-400'
+                                }`}
+                            >
+                                {tracker.pokemonName}
+                                {/* Shiny Tracker */}
                             </h2>
 
                             <div className="flex justify-between items-center">
