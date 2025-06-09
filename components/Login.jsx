@@ -5,6 +5,8 @@ import { auth, db } from 'lib/firebase';
 import { useCooldownTimer } from './useCooldownTimer';
 import { useRouter } from 'next/navigation';
 
+import { saveAuthToStorage } from 'lib/authUtils';
+
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 export default function Login({ savedData = {} }) {
@@ -22,8 +24,9 @@ export default function Login({ savedData = {} }) {
         }
         try {
             await signInWithEmailAndPassword(auth, email, password);
+            await saveAuthToStorage();
             console.log('Login successful!');
-            router.push('/qwdas');
+            router.push('/');
         } catch (error) {
             if (error.code === 'auth/too-many-requests') {
                 startCooldown();
@@ -56,10 +59,12 @@ export default function Login({ savedData = {} }) {
                 role: 'user', // misal default role,
                 userAtt: savedData
             };
+
+            saveAuthToStorage();
+            
             console.log(' 🚀 ༼;´༎ຶ ۝ ༎ຶ༽ ~  (ノ ° 益 °) ノ ~ (っ◔◡◔)っ ~   ~ dataSet:', dataSet);
 
             await setDoc(doc(db, 'users', user.uid), dataSet);
-
             console.log('User signed up and saved to Firestore!');
 
             router.push('/');

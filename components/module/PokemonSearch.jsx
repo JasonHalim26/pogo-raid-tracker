@@ -29,7 +29,7 @@ export default function PokemonSearch({ pokemonList, value, onChange }) {
     };
 
     return (
-        <div className="relative w-full max-w-md text-gray-900">
+        <div className="relative w-full sm:w-[70%] text-gray-900">
             {/* Input + ghost suggestion overlay */}
             <div className="relative">
                 {/* Ghost suggestion text */}

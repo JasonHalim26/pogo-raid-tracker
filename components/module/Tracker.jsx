@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import LoadingPopup from './LoadingPopup';
 import PokemonSearch from './PokemonSearch';
+import { getAuthFromStorage, getUserDataFromDB } from 'lib/authUtils';
 // import getAllPokemonNames from '../api/utils';
 
 export default function ShinyTracker() {
@@ -10,19 +11,44 @@ export default function ShinyTracker() {
     const [loading, setLoading] = useState(true);
     const [newPokemonName, setNewPokemonName] = useState('');
     const [allTrackers, setAllTrackers] = useState([]);
+    console.log(' 🚀 ༼;´༎ຶ ۝ ༎ຶ༽ ~  (ノ ° 益 °) ノ ~ (っ◔◡◔)っ ~   ~ allTrackers:', allTrackers);
     const [actionLoading, setActionLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [user, setUser] = useState('');
 
     useEffect(() => {
-        fetchTrackers();
+        const fetchData = async () => {
+            const auth = await getAuthFromStorage();
+            console.log('Fetched user from localforage:', auth);
+
+            if (auth?.uid) {
+                const userData = await getUserDataFromDB(auth.uid);
+                console.log('🔥 Firestore user data:', userData);
+
+                // Optional: set to state if needed
+                setUser({ ...userData, uid: auth.uid });
+            }
+        };
+
+        fetchData(); // fetch auth + Firestore user
     }, []);
+
+    useEffect(() => {
+        console.log(' 🚀 ༼;´༎ຶ ۝ ༎ຶ༽ ~  (ノ ° 益 °) ノ ~ (っ◔◡◔)っ ~   ~ userData:', user);
+        if (user?.uid) {
+            fetchTrackers(user.uid);
+        }
+    }, [user?.uid]);
 
     const fetchTrackers = async () => {
         try {
-            const res = await fetch('/api/raid-tracker');
+            const res = await fetch(`/api/raid-tracker?userId=${user.uid}`, {
+                cache: 'no-store' // prevents caching, always fetch fresh data
+            });
             const data = await res.json();
-            if (data.trackers) {
-                const sortedTrackers = data.trackers.sort((a, b) => {
+            console.log(' 🚀 ༼;´༎ຶ ۝ ༎ຶ༽ ~  (ノ ° 益 °) ノ ~ (っ◔◡◔)っ ~   ~ data:', data);
+            if (data) {
+                const sortedTrackers = data.sort((a, b) => {
                     const aSec = a.updatedAt?._seconds || 0;
                     const aNano = a.updatedAt?._nanoseconds || 0;
                     const bSec = b.updatedAt?._seconds || 0;
@@ -48,9 +74,14 @@ export default function ShinyTracker() {
         try {
             setActionLoading(true);
             await fetch('/api/raid-tracker', {
-                method: 'POST',
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ totalRaids: updatedRaids, gotShiny: shinyStatus, pokemonName: name })
+                body: JSON.stringify({
+                    totalRaids: updatedRaids,
+                    gotShiny: shinyStatus,
+                    pokemonName: name,
+                    userId: user.uid || ''
+                })
             });
 
             await fetchTrackers();
@@ -60,6 +91,36 @@ export default function ShinyTracker() {
         }
     };
 
+    const addTracker = async (updatedRaids, shinyStatus, name) => {
+        try {
+            setActionLoading(true);
+            await fetch('/api/raid-tracker', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    totalRaids: updatedRaids,
+                    gotShiny: shinyStatus,
+                    pokemonName: name,
+                    userId: user.uid || ''
+                })
+            });
+
+            await fetchTrackers();
+            setActionLoading(false);
+        } catch (e) {
+            console.error('Error saving tracker:', e);
+        }
+    };
+
+    // async function addPokemonCardForUser(userId, cardData) {
+    //     try {
+    //       const userCardsRef = collection(db, 'users', userId, 'pokemonCards');
+    //       const docRef = await addDoc(userCardsRef, cardData);
+    //       console.log('Pokemon card added with ID:', docRef.id);
+    //     } catch (error) {
+    //       console.error('Error adding pokemon card:', error);
+    //     }
+    //   }
     const createPokemon = async () => {
         if (!newPokemonName.trim()) return;
 
@@ -75,11 +136,10 @@ export default function ShinyTracker() {
 
         setErrorMessage('');
         setActionLoading(true);
-        await saveTracker(0, false, newPokemonName.trim());
+        await addTracker(0, false, newPokemonName.trim());
         setActionLoading(false);
         setNewPokemonName('');
     };
-
     const deleteTracker = async (pokemonName) => {
         try {
             setActionLoading(true);
@@ -87,7 +147,7 @@ export default function ShinyTracker() {
             const res = await fetch('/api/raid-tracker', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pokemonName })
+                body: JSON.stringify({ pokemonName, userId: user.uid })
             });
 
             if (!res.ok) {
@@ -95,12 +155,12 @@ export default function ShinyTracker() {
                 throw new Error(errorData.error || 'Failed to delete tracker');
             }
 
-            // Refresh trackers after delete
-            await fetchTrackers();
-            setActionLoading(false);
+            await fetchTrackers(); // Refresh UI
         } catch (error) {
             console.error('Delete error:', error.message);
             alert(`Error deleting tracker: ${error.message}`);
+        } finally {
+            setActionLoading(false);
         }
     };
 
@@ -121,6 +181,11 @@ export default function ShinyTracker() {
     return (
         <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-start p-6 space-y-6">
             {actionLoading && <LoadingPopup />}
+            <div className="flex gap-2 items-center flex-wrap">
+                <p className="text-sm font-bold text-center text-blue-400">user name:{user?.userAtt?.username}</p>|
+                <p className="text-sm font-bold text-center text-blue-400">user id: {user?.userAtt?.userId}</p>|
+                <p className="text-sm font-bold text-center text-blue-400">level: {user?.userAtt?.level}</p>
+            </div>
 
             <div className="w-full max-w-3xl bg-gray-800 rounded-lg shadow-lg p-6 space-y-4">
                 <h1 className="text-2xl font-bold text-center text-blue-400">Shiny Tracker</h1>
@@ -140,16 +205,15 @@ export default function ShinyTracker() {
 
                     <button
                         onClick={createPokemon}
-                        className="bg-blue-600 px-3 py-2 rounded hover:bg-blue-500 w-full sm:w-auto"
+                        className="bg-blue-600 px-3 py-2 rounded hover:bg-blue-500 w-full sm:w-[28%] "
                     >
-                        Add Pokémon
+                        + Add Pokémon
                     </button>
                 </div>
             </div>
 
             <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {allTrackers.map((tracker, idx) => {
-                    console.log(' 🚀 ༼;´༎ຶ ۝ ༎ຶ༽ ~  (ノ ° 益 °) ノ ~ (っ◔◡◔)っ ~   ~ tracker:', tracker);
                     const progress = Math.min((tracker.totalRaids / maxPity) * 100, 100);
                     const left = Math.max(maxPity - tracker.totalRaids, 0);
 
@@ -203,7 +267,13 @@ export default function ShinyTracker() {
                                     >
                                         🌟 Shiny
                                     </button>
-                                    <button onClick={rmvRaid} className="bg-red-600 px-4 py-2 rounded hover:bg-red-500">
+                                    <button
+                                        onClick={rmvRaid}
+                                        className="bg-red-600 px-4 py-2 rounded hover:bg-red-500
+                                            disabled:bg-gray-400 disabled:cursor-not-allowed 
+                                            disabled:hover:bg-gray-400"
+                                        disabled={tracker.totalRaids < 1}
+                                    >
                                         - {/* - Decrease Raid */}
                                     </button>
                                     <button
